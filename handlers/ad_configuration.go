@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"eth2-exporter/db"
-	"eth2-exporter/templates"
-	"eth2-exporter/types"
-	"eth2-exporter/utils"
 	"net/http"
 	"strconv"
+
+	"github.com/gobitfly/eth2-beaconchain-explorer/db"
+	"github.com/gobitfly/eth2-beaconchain-explorer/templates"
+	"github.com/gobitfly/eth2-beaconchain-explorer/types"
+	"github.com/gobitfly/eth2-beaconchain-explorer/utils"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/csrf"
@@ -14,14 +15,14 @@ import (
 
 // Load Ad Configuration page
 func AdConfiguration(w http.ResponseWriter, r *http.Request) {
+	if isAdmin, _ := handleAdminPermissions(w, r); !isAdmin {
+		return
+	}
+
 	templateFiles := append(layoutTemplateFiles, "user/ad_configuration.html")
 	var userTemplate = templates.GetTemplate(templateFiles...)
 
 	w.Header().Set("Content-Type", "text/html")
-
-	if !hasPermission(w, r) {
-		return
-	}
 
 	configs, err := db.GetAdConfigurations()
 
@@ -51,7 +52,7 @@ func AdConfiguration(w http.ResponseWriter, r *http.Request) {
 
 // Insert / Update Ad configuration
 func AdConfigurationPost(w http.ResponseWriter, r *http.Request) {
-	if !hasPermission(w, r) {
+	if isAdmin, _ := handleAdminPermissions(w, r); !isAdmin {
 		return
 	}
 
@@ -122,9 +123,10 @@ func AdConfigurationPost(w http.ResponseWriter, r *http.Request) {
 
 // Delete Ad configuration
 func AdConfigurationDeletePost(w http.ResponseWriter, r *http.Request) {
-	if !hasPermission(w, r) {
+	if isAdmin, _ := handleAdminPermissions(w, r); !isAdmin {
 		return
 	}
+
 	err := r.ParseForm()
 	if err != nil {
 		utils.LogError(err, "error parsing form", 0)
@@ -146,19 +148,4 @@ func AdConfigurationDeletePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/user/ad_configuration", http.StatusSeeOther)
-}
-
-func hasPermission(w http.ResponseWriter, r *http.Request) bool {
-	user, _, err := getUserSession(r)
-	if err != nil {
-		utils.LogError(err, "error retrieving session", 0)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return false
-	}
-
-	if user.UserGroup != "ADMIN" {
-		http.Error(w, "Insufficient privileges", http.StatusUnauthorized)
-		return false
-	}
-	return true
 }

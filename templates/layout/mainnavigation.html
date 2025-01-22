@@ -3,7 +3,7 @@
     <div class="container">
       <a class="navbar-brand" href="/">
         {{ includeSvg "brand_svg" }}
-        <span class="brand-text">beaconcha.in</span>
+        <span class="brand-text">{{ config.Frontend.SiteBrand }}</span>
       </a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -54,15 +54,23 @@
 
 {{ define "mainNavigationItem" }}
   {{ if not .IsHidden }}
-    <a class="dropdown-item" href="{{ .Path }}">
-      <span class="nav-icon">
-        {{ if .CustomIcon }}
-          {{ includeSvg .CustomIcon }}
-        {{ else }}
-          <i class="fas {{ .Icon }} mr-2"></i>
-        {{ end }}
+    <a class="dropdown-item" {{ if .IsHighlighted }}style="padding:0 0.625rem;"{{ end }} href="{{ .Path }}">
+      {{ $buttonClass := "" }}
+      {{ $textClass := "nav-text" }}
+      {{ if .IsHighlighted }}
+        {{ $buttonClass = "btn btn-primary d-flex align-items-center" }}
+        {{ $textClass = "text-white" }}
+      {{ end }}
+      <span class="{{ $buttonClass }}">
+        <span class="nav-icon">
+          {{ if .CustomIcon }}
+            {{ includeSvg .CustomIcon }}
+          {{ else }}
+            <i class="fas {{ .Icon }} mr-2"></i>
+          {{ end }}
+        </span>
+        <span class="{{ $textClass }}">{{ .Label }}</span>
       </span>
-      <span class="nav-text">{{ .Label }}</span>
     </a>
   {{ end }}
 {{ end }}

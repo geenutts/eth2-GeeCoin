@@ -50,19 +50,22 @@
       function createWithdrawalTable() {
         if (!table) {
           table = $("#withdrawal-table").DataTable({
+            searchDelay: 0,
             processing: true,
             serverSide: true,
             stateSave: true,
+            stateSaveCallback: function (settings, data) {
+              data.start = 0
+              localStorage.setItem("DataTables_" + settings.sInstance, JSON.stringify(data))
+            },
+            stateLoadCallback: function (settings) {
+              return JSON.parse(localStorage.getItem("DataTables_" + settings.sInstance))
+            },
             ordering: true,
-            order: [[0, "desc"]],
+            order: [[1, "desc"]],
             lengthChange: false,
             searching: false,
-            ajax: {
-              url: `/dashboard/data/withdrawal`,
-              data: function (d) {
-                d.validators = getValidatorString()
-              },
-            },
+            ajax: dataTableLoader(`/dashboard/data/withdrawal`, new URLSearchParams([["validators", getValidatorString()]])),
             pagingType: "input",
             pageLength: 10,
             language: {
@@ -71,6 +74,9 @@
                 previous: '<i class="fas fa-chevron-left"></i>',
                 next: '<i class="fas fa-chevron-right"></i>',
               },
+            },
+            drawCallback: function (settings) {
+              formatTimestamps()
             },
           })
           initializedWithdrawalTable = true
